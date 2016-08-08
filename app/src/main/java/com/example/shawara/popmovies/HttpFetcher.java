@@ -93,6 +93,7 @@ public class HttpFetcher {
             Gson gson = new GsonBuilder().create();
             MoviesDB moviesDB = gson.fromJson(data, MoviesDB.class);
             //  return moviesDB;
+            moviesDB.setCurrentSortBy(getsortType());
             MoviesLab.getMoviesLab(mContext).setmMoviesDB(moviesDB);
             return moviesDB;
         }

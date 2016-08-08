@@ -1,8 +1,10 @@
 package com.example.shawara.popmovies;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
@@ -123,10 +125,22 @@ public class PopMoviesFragment extends Fragment {
     }
 
 
+    public String getsortType() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String sortType = prefs.getString(getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_default));
+        return sortType;
+    }
+
     private void updateView(int page) {
         List<Movie> m = MoviesLab.getMoviesLab(getActivity()).getMovies();
+      MoviesDB md=MoviesLab.getMoviesLab(getActivity()).getmMoviesDB();
+        String curSortType=getsortType();
+        String listSorttype="";
+        if(md!=null)listSorttype=md.getCurrentSortBy();
+
         int p = getPageNo();
-        if (m == null || p != page) {
+        if (m == null || p != page  || !listSorttype.equals(curSortType) ) {
             new MoviesFetcherTask().execute(page + "");
         } else {
             movieAdapter = new MovieAdapter(m);

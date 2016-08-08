@@ -25,6 +25,9 @@ public class MoviesLab {
         return mMoviesLab;
     }
 
+    public MoviesDB getmMoviesDB() {
+        return mMoviesDB;
+    }
 
     public int getPageNo(){
         return mMoviesDB==null?1:mMoviesDB.getPage();
