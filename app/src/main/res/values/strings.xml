@@ -6,11 +6,18 @@
     <string name="pref_sort_label">Sort Movies By</string>
     <string name="pref_sort_label_popular">Most Popular</string>
     <string name="pref_sort_popular" translatable="false">popular?</string>
+    <string name="pref_sort_favorite" translatable="false">favorite</string>
     <string name="pref_sort_label_rated">Top rated</string>
+    <string name="pref_sort_label_favorite">Favorite</string>
     <string name="pref_sort_rated" translatable="false">top_rated?</string>
     <string name="pref_sort_key" translatable="false">sort_by</string>
+
     <string name="settings">Settings</string>
     <string name="movie_detail">MovieDetail</string>
-    <string name="make_as_favorite">MAKE AS\nFAVORITE</string>
+    <string name="reviews">Reviews</string>
+    <string name="trailers">Trailers</string>
+    <string name="make_favorite">Make favorite</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_share">Share</string>
 
 </resources>

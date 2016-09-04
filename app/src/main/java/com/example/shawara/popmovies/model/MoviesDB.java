@@ -1,4 +1,6 @@
-package com.example.shawara.popmovies;
+package com.example.shawara.popmovies.model;
+
+import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 import java.util.List;
@@ -16,8 +18,7 @@ public class MoviesDB {
      */
 
     private int page;
-    private  String currentSortBy;
-
+    private String currentSortBy;
 
 
     /**
@@ -46,6 +47,7 @@ public class MoviesDB {
     public void setPage(int page) {
         this.page = page;
     }
+
     public String getCurrentSortBy() {
         return currentSortBy;
     }
@@ -62,15 +64,28 @@ public class MoviesDB {
         this.results = results;
     }
 
-    public static class Movie implements Serializable{
+    public static class Movie implements Serializable {
+
+        private String id;
+        private long _id;
         private String poster_path;
         private String overview;
         private String release_date;
+        @SerializedName("title")
         private String original_title;
         private double vote_average;
+        private double popularity;
 
         public String getPoster_path() {
-            return "http://image.tmdb.org/t/p/w185/"+poster_path;
+            return poster_path;
+        }
+
+        public long get_id() {
+            return _id;
+        }
+
+        public void set_id(long _id) {
+            this._id = _id;
         }
 
         public void setPoster_path(String poster_path) {
@@ -86,7 +101,7 @@ public class MoviesDB {
         }
 
         public String getRelease_date() {
-            return release_date.substring(0,4);
+            return release_date.substring(0, 4);
         }
 
         public void setRelease_date(String release_date) {
@@ -101,8 +116,24 @@ public class MoviesDB {
             this.original_title = original_title;
         }
 
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public double getPopularity() {
+            return popularity;
+        }
+
+        public void setPopularity(double popularity) {
+            this.popularity = popularity;
+        }
+
         public String getVote_average() {
-            return vote_average+"/10";
+            return vote_average + "/10";
         }
 
         public void setVote_average(double vote_average) {

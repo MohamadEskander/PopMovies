@@ -7,20 +7,59 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class PopMoviesActivity extends SingleFragmentActivity {
+import com.example.shawara.popmovies.model.MoviesDB;
+import com.example.shawara.popmovies.model.MoviesDB.Movie;
 
+public class PopMoviesActivity extends AppCompatActivity implements PopMoviesFragment.Callback {
+    private String mSortType;
+    private static final String DETAILFRAGMENT_TAG = "DFTAG";
+    private boolean mTwoPane;
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mSortType = Utility.getsortType(this);
+
+        setContentView(R.layout.activity_main);
+
+        if (findViewById(R.id.movie_detail_container) != null) {
+            mTwoPane = true;
+
+            if (savedInstanceState == null) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.movie_detail_container, new MovieDetailFragment(), DETAILFRAGMENT_TAG)
+                        .commit();
+            }
+        } else {
+            mTwoPane = false;
+        }
+
+    }
+
     protected Fragment createFragment() {
         return PopMoviesFragment.newInstance();
     }
 
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        String sort = Utility.getsortType(this);
+        if (sort != null && !sort.equals(mSortType)) {
+            PopMoviesFragment pmf = (PopMoviesFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_pop);
+            if (null != pmf) {
+                pmf.updateView();
+            }
+
+            mSortType = sort;
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.pop_movies_activity, menu);
+
         return true;
     }
 
@@ -38,5 +77,20 @@ public class PopMoviesActivity extends SingleFragmentActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+
+    @Override
+    public void onItemSelected(Movie movie) {
+        if (mTwoPane) {
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.movie_detail_container, MovieDetailFragment.newInstance(movie), DETAILFRAGMENT_TAG)
+                    .commit();
+
+        } else {
+            Intent intent = MovieDetailActivity.newIntent(this, movie);
+            startActivity(intent);
+        }
     }
 }

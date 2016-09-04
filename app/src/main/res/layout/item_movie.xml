@@ -3,11 +3,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
-<ImageView
 
-    android:layout_width="match_parent"
-    android:layout_height="270dp"
-    android:scaleType="centerCrop"
-    android:id="@+id/movie_holder_image_view"
-    />
+    <ImageView
+        android:id="@+id/movie_holder_image_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+         />
 </LinearLayout>

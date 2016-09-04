@@ -1,176 +1,185 @@
 package com.example.shawara.popmovies;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.AdapterView;
+import android.widget.GridView;
 
-import com.example.shawara.popmovies.MoviesDB.Movie;
-import com.squareup.picasso.Picasso;
+import com.example.shawara.popmovies.data.MovieContract;
+import com.example.shawara.popmovies.model.MoviesDB;
+import com.example.shawara.popmovies.model.MoviesDB.Movie;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Created by shawara on 8/1/2016.
  */
-public class PopMoviesFragment extends Fragment {
-    private RecyclerView mRecyclerView;
+public class PopMoviesFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+    private GridView gridView;
     private MovieAdapter movieAdapter;
+    public static boolean island = false;
+    public static int w;
+    public static int h;
     private GridLayoutManager glm;
+    private static final int MOVIE_LOADER = 0;
+
+    public final static String Cols[] = {
+            MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID,
+            MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry.COLUMN_MOVIE_ID,
+            MovieContract.MovieEntry.COLUMN_POSTER_PATH,
+            MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE,
+            MovieContract.MovieEntry.COLUMN_OVERVIEW,
+            MovieContract.MovieEntry.COLUMN_RELEASE_DATE,
+            MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE,
+            MovieContract.MovieEntry.COLUMN_POPULARITY
+    };
+
+    public static int MOVIE_ID = 0;
+    public static int MOVIE_LINK_ID = 1;
+    public static int POSTER_PATH = 2;
+    public static int ORIGINAL_TITLE = 3;
+    public static int OVERVIEW = 4;
+    public static int RELEASE_DATE = 5;
+    public static int VOTE_AVERAGE = 6;
+    public static int POPULARITY = 7;
 
 
     public static PopMoviesFragment newInstance() {
         return new PopMoviesFragment();
     }
 
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        updateView(getPageNo());
+    public interface Callback {
+        void onItemSelected(Movie movie);
     }
-
-    private int getPageNo() {
-        return MoviesLab.getMoviesLab(getActivity()).getPageNo();
-    }
-
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_pop_movies, container, false);
-        mRecyclerView = (RecyclerView) v.findViewById(R.id.pop_movies_recycler_view);
-        mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
-        glm = (GridLayoutManager) mRecyclerView.getLayoutManager();
+        gridView = (GridView) v.findViewById(R.id.pop_movies_grid_view);
 
-        mRecyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
-            boolean z = true;
+        w = getActivity().getWindowManager().getDefaultDisplay().getWidth();
+        h = getActivity().getWindowManager().getDefaultDisplay().getHeight();
+        gridView.setNumColumns(w > h ? 3 : 2);
+        island = (w > h);
 
+        movieAdapter = new MovieAdapter(getActivity(), null, 0);
+        gridView.setAdapter(movieAdapter);
+
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                int p = getPageNo();
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    if (glm.findFirstCompletelyVisibleItemPosition() == 0) {
-                        if (p > 1) updateView(p - 1);
-                    } else if (glm.findLastCompletelyVisibleItemPosition() == mRecyclerView.getAdapter().getItemCount() - 1) {
-                        if (p < 255) updateView(p + 1);
-                    }
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+                if (cursor != null) {
+
+                    Movie movie = getMovieFromCursor(cursor);
+
+                    ((Callback) getActivity())
+                            .onItemSelected(movie);
+
                 }
             }
-
-
-
         });
+
+        new MoviesFetcherTask().execute(1 + "");
+
         return v;
 
     }
 
+    private Movie getMovieFromCursor(Cursor cursor) {
+        Movie movie = new Movie();
+        movie.set_id(cursor.getLong(MOVIE_ID));
+        movie.setId(cursor.getString(MOVIE_LINK_ID));
+        movie.setPoster_path(cursor.getString(POSTER_PATH));
+        movie.setOriginal_title(cursor.getString(ORIGINAL_TITLE));
+        movie.setOverview(cursor.getString(OVERVIEW));
+        movie.setRelease_date(cursor.getString(RELEASE_DATE));
+        movie.setVote_average(cursor.getDouble(VOTE_AVERAGE));
+        movie.setPopularity(cursor.getDouble(POPULARITY));
+        return movie;
+    }
 
-    private class MovieHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        private ImageView mImageView;
-        private Movie mMovie;
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
+    }
 
-        public MovieHolder(View itemView) {
-            super(itemView);
-            mImageView = (ImageView) itemView.findViewById(R.id.movie_holder_image_view);
-            mImageView.setOnClickListener(this);
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        String sortOrder = null;
+        Uri tableUri = null;
+        if (Utility.getsortType(getContext()).equals(getString(R.string.pref_sort_popular))) {
+            tableUri = MovieContract.PopularEntry.CONTENT_URI;
+            sortOrder = MovieContract.MovieEntry.COLUMN_POPULARITY + " DESC";
+        } else if (Utility.getsortType(getContext()).equals(getString(R.string.pref_sort_rated))) {
+            tableUri = MovieContract.TopRatedEntry.CONTENT_URI;
+            sortOrder = MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE + " DESC";
+        } else if (Utility.getsortType(getContext()).equals(getString(R.string.pref_sort_favorite))) {
+            tableUri = MovieContract.FavoriteEntry.CONTENT_URI;
         }
 
-        public void bindMovieBoster(Movie m) {
-            mMovie = m;
-            Picasso.with(getActivity()).load(mMovie.getPoster_path()).into(mImageView);
 
-        }
+        return new CursorLoader(getActivity(),
+                tableUri,
+                Cols,
+                null,
+                null,
+                sortOrder);
 
-        @Override
-        public void onClick(View v) {
-            startActivity(MovieDetailActivity.newIntent(getActivity(),mMovie));
-        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        movieAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        movieAdapter.swapCursor(null);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateView();
+    }
+
+    public void updateView() {
+        if (!Utility.getsortType(getContext()).equals(getString(R.string.pref_sort_favorite)))
+            new MoviesFetcherTask().execute(1 + "");
+        //Log.d("hhh", "update");
+        getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
     }
 
 
-    private class MovieAdapter extends RecyclerView.Adapter<MovieHolder> {
-        List<Movie> movies;
-
-        public MovieAdapter(List<Movie> m) {
-            movies = m;
-        }
+    private class MoviesFetcherTask extends AsyncTask<String, Void, Void> {
 
         @Override
-        public MovieHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View v = getActivity().getLayoutInflater().inflate(R.layout.item_movie, parent, false);
-            return new MovieHolder(v);
-        }
-
-        @Override
-        public void onBindViewHolder(MovieHolder holder, int position) {
-            holder.bindMovieBoster(movies.get(position));
-        }
-
-        @Override
-        public int getItemCount() {
-            return movies.size();
-        }
-    }
-
-
-    public String getsortType() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String sortType = prefs.getString(getString(R.string.pref_sort_key),
-                getString(R.string.pref_sort_default));
-        return sortType;
-    }
-
-    private void updateView(int page) {
-        List<Movie> m = MoviesLab.getMoviesLab(getActivity()).getMovies();
-      MoviesDB md=MoviesLab.getMoviesLab(getActivity()).getmMoviesDB();
-        String curSortType=getsortType();
-        String listSorttype="";
-        if(md!=null)listSorttype=md.getCurrentSortBy();
-
-        int p = getPageNo();
-        if (m == null || p != page  || !listSorttype.equals(curSortType) ) {
-            new MoviesFetcherTask().execute(page + "");
-        } else {
-            movieAdapter = new MovieAdapter(m);
-            mRecyclerView.setAdapter(movieAdapter);
-        }
-    }
-
-
-    private class MoviesFetcherTask extends AsyncTask<String, Void, MoviesDB> {
-
-        @Override
-        protected MoviesDB doInBackground(String... params) {
-            MoviesDB m = null;
+        protected Void doInBackground(String... params) {
             try {
-                m = new HttpFetcher(getActivity(), Integer.parseInt(params[0])).getData();
+                new HttpFetcher(getActivity(), Integer.parseInt(params[0])).getData();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return m;
+            return null;
         }
 
 
-        @Override
-        protected void onPostExecute(MoviesDB moviesDB) {
-            // Log.d("shawraa", "onPostExecute: "+moviesDB.getResults().size());
-            if (moviesDB != null) {
-                movieAdapter = new MovieAdapter(moviesDB.getResults());
-                mRecyclerView.setAdapter(movieAdapter);
-
-            }
-        }
     }
 }

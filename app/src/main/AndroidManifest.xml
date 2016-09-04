@@ -21,12 +21,27 @@
         <activity
             android:name=".SettingsActivity"
             android:label="@string/settings"
-            android:parentActivityName=".PopMoviesActivity"></activity>
+            android:parentActivityName=".PopMoviesActivity"
+            android:theme="@style/SettingsTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.shawara.popmovies.PopMoviesActivity" />
+        </activity>
 
         <activity
             android:name=".MovieDetailActivity"
             android:label="@string/movie_detail"
-            android:parentActivityName=".PopMoviesActivity"></activity>
+            android:parentActivityName=".PopMoviesActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.shawara.popmovies.PopMoviesActivity" />
+        </activity>
+        <provider
+            android:authorities="com.example.shawara.popmovies"
+            android:name=".data.MovieProvider"
+            android:exported="false"
+            android:syncable="true" />
+
     </application>
 
 </manifest>
