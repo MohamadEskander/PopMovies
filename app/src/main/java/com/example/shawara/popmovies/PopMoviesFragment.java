@@ -123,7 +123,8 @@ public class PopMoviesFragment extends Fragment implements LoaderManager.LoaderC
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
         String sortOrder = null;
-        Uri tableUri = null;
+        Uri tableUri = MovieContract.PopularEntry.CONTENT_URI;
+
         if (Utility.getsortType(getContext()).equals(getString(R.string.pref_sort_popular))) {
             tableUri = MovieContract.PopularEntry.CONTENT_URI;
             sortOrder = MovieContract.MovieEntry.COLUMN_POPULARITY + " DESC";
@@ -134,7 +135,7 @@ public class PopMoviesFragment extends Fragment implements LoaderManager.LoaderC
             tableUri = MovieContract.FavoriteEntry.CONTENT_URI;
         }
 
-
+        Log.d("errr", (tableUri == null) + "ghh");
         return new CursorLoader(getActivity(),
                 tableUri,
                 Cols,

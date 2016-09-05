@@ -26,6 +26,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.shawara.popmovies.data.MovieContract;
 import com.example.shawara.popmovies.data.MovieContract.FavoriteEntry;
@@ -53,7 +54,7 @@ public class MovieDetailFragment extends Fragment {
     private LinearLayout mLinearLayout;
     private List<Trailer> mTrailerList = new ArrayList<>();
     private List<Review> mReviewList = new ArrayList<>();
-
+    private LayoutInflater mlaLayoutInflater;
     private TextView mTitleTextView;
     private TextView mDateTextView;
     private TextView mRateTextView;
@@ -79,6 +80,7 @@ public class MovieDetailFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        mlaLayoutInflater = inflater;
         View v = inflater.inflate(R.layout.fragment_movie_detail, container, false);
         setHasOptionsMenu(true);
 
@@ -117,12 +119,15 @@ public class MovieDetailFragment extends Fragment {
                     getActivity().getContentResolver().delete(FavoriteEntry.CONTENT_URI, FavoriteEntry.COLUMN_MOVIE_ID + " = ? ",
                             new String[]{movie.getId() + ""});
                     mMakeFavoriteStar.setImageResource(R.drawable.rate_star_big_off_holo_light);
+                    Toast.makeText(getContext(), movie.getOriginal_title() + " is removed from your favorite successfully", Toast.LENGTH_SHORT).show();
                 } else {
                     ContentValues cv = new ContentValues();
                     cv.put(FavoriteEntry.COLUMN_MOVIE_ID, movie.getId());
                     getActivity().getContentResolver().insert(FavoriteEntry.CONTENT_URI, cv);
-                    ;
+
                     mMakeFavoriteStar.setImageResource(R.drawable.rate_star_big_on_holo_light);
+                    Toast.makeText(getContext(), movie.getOriginal_title() + " is added to your favorite successfully", Toast.LENGTH_SHORT).show();
+
                 }
                 mFavorite = !mFavorite;
             }
@@ -237,7 +242,7 @@ public class MovieDetailFragment extends Fragment {
                 mLinearLayout.removeAllViews();
 
                 for (int i = 0; i < reviews.size(); i++) {
-                    View item = getActivity().getLayoutInflater().inflate(R.layout.review_list_item, mLinearLayout, false);
+                    View item = mlaLayoutInflater.inflate(R.layout.review_list_item, mLinearLayout, false);
                     ((TextView) (item.findViewById(R.id.list_item_review_tv))).setText(reviews.get(i).getContent());
                     ((TextView) (item.findViewById(R.id.reviewer_name))).setText(reviews.get(i).getAuthor() + " : ");
                     mLinearLayout.addView(item);
