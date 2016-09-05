@@ -18,9 +18,9 @@ android {
         }
     }
 
-       buildTypes.each {
-                it.buildConfigField 'String', 'POP_MOVIES_API_KEY', '"127aa809ced13a8f31a4b3e6492c1218"'
-           }
+    buildTypes.each {
+        it.buildConfigField 'String', 'POP_MOVIES_API_KEY', '"127aa809ced13a8f31a4b3e6492c1218"'
+    }
 }
 
 repositories {

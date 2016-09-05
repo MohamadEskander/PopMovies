@@ -50,8 +50,11 @@ public class MovieAdapter extends CursorAdapter {
         }
 
         public void bindMoviePoster(String poster_path) {
-            mImageView.setImageResource(R.drawable.ic_launcher);
-            Picasso.with(mContext).load("http://image.tmdb.org/t/p/w185/" + poster_path).into(mImageView);
+            Picasso.with(mContext)
+                    .load("http://image.tmdb.org/t/p/w185/" + poster_path)
+                    .placeholder(R.drawable.loading)
+                    .error(R.drawable.erro)
+                    .into(mImageView);
 
         }
 

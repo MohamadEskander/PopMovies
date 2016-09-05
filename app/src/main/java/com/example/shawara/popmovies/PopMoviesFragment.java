@@ -174,7 +174,7 @@ public class PopMoviesFragment extends Fragment implements LoaderManager.LoaderC
         @Override
         protected Void doInBackground(String... params) {
             try {
-                new HttpFetcher(getActivity(), Integer.parseInt(params[0])).getData();
+                new HttpFetcher(getContext(), Integer.parseInt(params[0])).getData();
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -66,6 +66,9 @@ public class MovieDetailFragment extends Fragment {
     private boolean mFavorite;
     private final static int FAVORITE_LOADER = 1;
     private String mFirstTrailer;
+    ReviewsTask.CallbacksListener mReviewsTaskListener;
+    TrailersTask.CallbacksListener mTrailersTaskListener;
+
     private ShareActionProvider mShareActionProvider;
 
     public static MovieDetailFragment newInstance(Movie movie) {
@@ -79,7 +82,7 @@ public class MovieDetailFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(final LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mlaLayoutInflater = inflater;
         View v = inflater.inflate(R.layout.fragment_movie_detail, container, false);
         setHasOptionsMenu(true);
@@ -141,8 +144,43 @@ public class MovieDetailFragment extends Fragment {
         Picasso.with(getActivity()).load("http://image.tmdb.org/t/p/w185/" + movie.getPoster_path()).into(mMovieImageView);
 
 
-        new TrailersTask().execute(movie.getId());
-        new ReviewsTask().execute(movie.getId());
+        mReviewsTaskListener = new ReviewsTask.CallbacksListener() {
+            @Override
+            public void onReviewsDownloaded(List<Review> reviews) {
+                if (reviews != null) {
+                    mLinearLayout.removeAllViews();
+
+                    for (int i = 0; i < reviews.size(); i++) {
+                        View item = inflater.inflate(R.layout.review_list_item, mLinearLayout, false);
+                        ((TextView) (item.findViewById(R.id.list_item_review_tv))).setText(reviews.get(i).getContent());
+                        ((TextView) (item.findViewById(R.id.reviewer_name))).setText(reviews.get(i).getAuthor() + " : ");
+                        mLinearLayout.addView(item);
+                    }
+                    mReviewList = reviews;
+                }
+            }
+        };
+
+
+        mTrailersTaskListener = new TrailersTask.CallbacksListener() {
+            @Override
+            public void onTrailersDownloaded(List<Trailer> trailers) {
+                if (trailers != null) {
+
+                    if (trailers.size() > 0) {
+                        mFirstTrailer = "http://www.youtube.com/watch?v=" + trailers.get(0).getKey();
+                        if (mShareActionProvider != null)
+                            mShareActionProvider.setShareIntent(createShareTrailerIntent());
+                    }
+                    mTrailerAdapter.setList(trailers);
+                    mTrailerAdapter.notifyDataSetChanged();
+
+                }
+            }
+        };
+
+        new TrailersTask(getActivity(), 1, mTrailersTaskListener).execute(movie.getId());
+        new ReviewsTask(getActivity(), 1, mReviewsTaskListener).execute(movie.getId());
 
 
         return v;
@@ -197,93 +235,6 @@ public class MovieDetailFragment extends Fragment {
         return shareIntent;
     }
 
-    private class TrailersTask extends AsyncTask<String, Void, List<Trailer>> {
-
-        @Override
-        protected List<Trailer> doInBackground(String... params) {
-            try {
-                return new HttpFetcher(getContext(), 1).getTrailers(params[0]);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(List<Trailer> trailers) {
-            if (trailers != null) {
-                if (trailers.size() > 0) {
-                    mFirstTrailer = "http://www.youtube.com/watch?v=" + trailers.get(0).getKey();
-                    if (mShareActionProvider != null)
-                        mShareActionProvider.setShareIntent(createShareTrailerIntent());
-                }
-                mTrailerAdapter.setList(trailers);
-                mTrailerAdapter.notifyDataSetChanged();
-            }
-        }
-    }
-
-
-    private class ReviewsTask extends AsyncTask<String, Void, List<Review>> {
-
-        @Override
-        protected List<Review> doInBackground(String... params) {
-            try {
-                return new HttpFetcher(getContext(), 1).getReviews(params[0]);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(List<Review> reviews) {
-            if (reviews != null) {
-                mLinearLayout.removeAllViews();
-
-                for (int i = 0; i < reviews.size(); i++) {
-                    View item = mlaLayoutInflater.inflate(R.layout.review_list_item, mLinearLayout, false);
-                    ((TextView) (item.findViewById(R.id.list_item_review_tv))).setText(reviews.get(i).getContent());
-                    ((TextView) (item.findViewById(R.id.reviewer_name))).setText(reviews.get(i).getAuthor() + " : ");
-                    mLinearLayout.addView(item);
-                }
-
-//                mReviewAdapter.setList(reviews);
-//                mReviewAdapter.notifyDataSetChanged();
-                mReviewList = reviews;
-            }
-        }
-    }
-
-/*
-    private class ReviewsAdapter extends RecyclerView.Adapter<ReviewHolder> {
-        List<Review> mList;
-
-        public ReviewsAdapter(List<Review> m) {
-            mList = m;
-        }
-
-        public void setList(List<Review> mList) {
-            this.mList = mList;
-        }
-
-        @Override
-        public ReviewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View v = getActivity().getLayoutInflater().inflate(R.layout.review_list_item, parent, false);
-            return new ReviewHolder(v);
-        }
-
-        @Override
-        public void onBindViewHolder(ReviewHolder holder, int position) {
-            holder.bindData(mList.get(position));
-        }
-
-        @Override
-        public int getItemCount() {
-            return mList.size();
-        }
-    }
-*/
 
     private class TrailersAdapter extends RecyclerView.Adapter<TrailerHolder> {
         List<Trailer> mList;
@@ -313,26 +264,6 @@ public class MovieDetailFragment extends Fragment {
         }
     }
 
-/*
-    private class ReviewHolder extends RecyclerView.ViewHolder {
-        private TextView name;
-        private TextView review;
-        private Review mReview;
-
-        public ReviewHolder(View itemView) {
-            super(itemView);
-            name = (TextView) itemView.findViewById(R.id.reviewer_name);
-            review = (TextView) itemView.findViewById(R.id.list_item_review_tv);
-        }
-
-        public void bindData(Review r) {
-            mReview = r;
-            name.setText(r.getAuthor());
-            review.setText(r.getContent());
-        }
-
-
-    }*/
 
     private class TrailerHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private TextView name;
