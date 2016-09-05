@@ -4,14 +4,9 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.BinderThread;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,19 +23,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.shawara.popmovies.data.MovieContract;
 import com.example.shawara.popmovies.data.MovieContract.FavoriteEntry;
 import com.example.shawara.popmovies.model.MoviesDB.Movie;
-import com.example.shawara.popmovies.model.Reviews;
 import com.example.shawara.popmovies.model.Reviews.Review;
-import com.example.shawara.popmovies.model.Trailers;
 import com.example.shawara.popmovies.model.Trailers.Trailer;
 import com.squareup.picasso.Picasso;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Created by shawara on 8/1/2016.

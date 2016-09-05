@@ -3,7 +3,6 @@ package com.example.shawara.popmovies;
 import android.content.Context;
 import android.os.AsyncTask;
 
-import com.example.shawara.popmovies.model.Reviews;
 import com.example.shawara.popmovies.model.Trailers;
 
 import java.io.IOException;
